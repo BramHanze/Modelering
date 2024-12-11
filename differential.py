@@ -141,3 +141,47 @@ def Von_Bertalanffy(ts, Vs):
     #plt.title('Von Bertalanffy Growth Model')
     plt.legend()
     return mse(c, d, ts, Vs), plt
+
+def linear_growth(ts, Vs):
+    # Linear growth equation
+    def linear_equation(V, t, c):
+        return c
+
+    # Solve the linear growth equation
+    def solve_linear(ts, V0, c):
+        return odeint(linear_equation, V0, ts, args=(c,)).flatten()
+
+    # Loss function: Mean squared error
+    def mse(observed, predicted):
+        return np.mean((observed - predicted) ** 2)
+
+    # Volume and parameter range
+    V0 = Vs[0]
+    c_range = np.linspace(0.01, 5.0, 100)  # Range for c
+
+    # Grid search for best parameter
+    best_mse = float('inf')
+    best_c = None
+
+    for c in c_range:
+        Vs_pred = solve_linear(ts, V0, c)
+        error = mse(Vs, Vs_pred)
+        if error < best_mse:
+            best_mse = error
+            best_c = c
+
+    # Print the found parameter
+    #print(f"c (growth rate constant): {best_c:.4f}")
+
+    ts_fine = np.linspace(min(ts), max(ts), 500)
+    Vs_fitted = solve_linear(ts_fine, V0, best_c)
+
+    # Plot the data and fit
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Linear Growth Curve')
+    plt.xlabel('$t$ (days)')
+    plt.ylabel('$V(t)$ (mm³)')
+    plt.legend()
+    plt.grid(True)
+    return best_mse, plt

@@ -22,11 +22,13 @@ n = len(ts)
 gompertz_mse, gompertz_fig = diff.gompertz(ts, Vs)
 mendelsohn_mse, mendelsohn_fig = diff.mendelsohn(ts, Vs)
 vb_mse, vb_fig = diff.Von_Bertalanffy(ts, Vs)
+linear_mse, linear_fig = diff.linear_growth(ts, Vs)
 
 models = [
     {'name': 'Gompertz', 'fig': gompertz_fig, 'mse': gompertz_mse},
     {'name': 'Mendelsohn', 'fig': mendelsohn_fig, 'mse': mendelsohn_mse},
-    {'name': 'Von Bertalanffy', 'fig': vb_fig, 'mse': vb_mse}
+    {'name': 'Von Bertalanffy', 'fig': vb_fig, 'mse': vb_mse},
+    {'name': 'Linear Model', 'fig': linear_fig, 'mse': linear_mse}
 ]
 
 #Display figures in the order of best  AIC
