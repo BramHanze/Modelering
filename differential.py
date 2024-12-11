@@ -185,3 +185,47 @@ def linear_growth(ts, Vs):
     plt.legend()
     plt.grid(True)
     return best_mse, plt
+
+def exponential_growth(ts, Vs):
+    # Exponential growth model: dV/dt = c * V
+    def exponential_equation(V, t, c):
+        return c * V
+
+    # Solve the exponential growth equation
+    def solve_exponential(ts, V0, c):
+        return odeint(exponential_equation, V0, ts, args=(c,)).flatten()
+
+    # Loss function: Mean squared error
+    def mse(observed, predicted):
+        return np.mean((observed - predicted) ** 2)
+
+    # Volume and parameter range
+    V0 = Vs[0]
+    c_range = np.linspace(0.01, 1.0, 100)  # Range for c
+
+    # Grid search for best parameter
+    best_mse = float('inf')
+    best_c = None
+
+    for c in c_range:
+        Vs_pred = solve_exponential(ts, V0, c)
+        error = mse(Vs, Vs_pred)
+        if error < best_mse:
+            best_mse = error
+            best_c = c
+
+    # Print the found parameter
+    #print(f"c (growth rate constant): {best_c:.4f}")
+
+    ts_fine = np.linspace(min(ts), max(ts), 500)
+    Vs_fitted = solve_exponential(ts_fine, V0, best_c)
+
+    # Plot the data and fit
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Exponential Growth Curve')
+    plt.xlabel('$t$ (days)')
+    plt.ylabel('$V(t)$ (mm³)')
+    plt.legend()
+    plt.grid(True)
+    return best_mse, plt
