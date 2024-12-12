@@ -38,17 +38,7 @@ def gompertz(ts, Vs):
     # Generate the fitted curve using the optimal parameters
     ts_fine = np.linspace(min(ts), max(ts), 500)
     Vs_fitted = solve_gompertz(ts_fine, V0, best_c, best_Vmax)
-
-    # Plot observed data and fitted curve
-    plt.figure(figsize=(10, 6))
-    plt.plot(ts, Vs, 'ro', label='Observed Data')
-    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Gompertz Curve')
-    #plt.title('Tumor Volume Growth (Gompertz Model)')
-    plt.xlabel('$t$ (days)')
-    plt.ylabel('$V(t)$ (mm³)')
-    plt.legend()
-    plt.grid(True)
-    return best_mse, plt
+    return best_mse, ts_fine, Vs_fitted
 
 def mendelsohn(ts, Vs):
     # Mendelsohn differential equation
@@ -87,25 +77,17 @@ def mendelsohn(ts, Vs):
     ts_fine = np.linspace(min(ts), max(ts), 500)
     Vs_fitted = solve_mendelsohn(ts_fine, V0, best_c, best_d)
 
-    # Plot observed data and fitted curve
-    plt.figure(figsize=(10, 6))
-    plt.plot(ts, Vs, 'ro', label='Observed Data')
-    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Mendelsohn Curve')
-    #plt.title('Tumor Volume Growth (Mendelsohn Model)')
-    plt.xlabel('$t$ (days)')
-    plt.ylabel('$V(t)$ (mm³)')
-    plt.legend()
-    plt.grid(True)
-    return best_mse, plt
+    return best_mse, ts_fine, Vs_fitted
 
-def Von_Bertalanffy(ts, Vs):
+
+def von_bertalanffy(ts, Vs):
     # Von Bertalanffy Model: V(t) = c * V^(2/3) - d * V
-    def von_bertalanffy(t, c, d):
-        return c * (t ** (2/3)) - d * t
+    def von_bertalanffy_model(t, c, d):
+        return c * (t ** (2/3)) - (d * t)
 
     # Error function (Mean Squared Error)
     def mse(c, d, ts, Vs):
-        predicted = von_bertalanffy(np.array(ts), c, d)
+        predicted = von_bertalanffy_model(np.array(ts), c, d)
         return np.mean((predicted - np.array(Vs))**2)
 
     # Initial guesses for c and d
@@ -121,26 +103,20 @@ def Von_Bertalanffy(ts, Vs):
         grad_c = 0
         grad_d = 0
         for t, V in zip(ts, Vs):
-            pred = von_bertalanffy(np.array([t]), c, d)
-            grad_c += 2 * (pred - V) * (t ** (2/3))  # Derivative w.r.t c
-            grad_d += 2 * (pred - V) * (-t)  # Derivative w.r.t d
+            pred = von_bertalanffy_model(np.array([t]), c, d)
+            grad_c += 2 * (pred - V) * (t ** (2/3))
+            grad_d += 2 * (pred - V) * (-t)
         c -= learning_rate * grad_c / len(ts)
         d -= learning_rate * grad_d / len(ts)
+        
+    ts_fitted = np.linspace(min(ts), max(ts), 100)
+    Vs_fitted = von_bertalanffy_model(ts_fitted, c, d)
+    
+    return mse(c, d, ts, Vs), ts_fitted, Vs_fitted
 
     #print(c = {c})
     #print(d = {d})
 
-    # Plot the data and the fit
-    plt.figure(figsize=(10, 6))
-    plt.plot(ts, Vs, 'ro', label='Observed Data')
-    t_fit = np.linspace(min(ts), max(ts), 100)
-    V_fit = von_bertalanffy(t_fit, c, d)
-    plt.plot(t_fit, V_fit, label='Von Bertalanffy Fit', color='blue')
-    plt.xlabel('Time (t)')
-    plt.ylabel('Volume (V)')
-    #plt.title('Von Bertalanffy Growth Model')
-    plt.legend()
-    return mse(c, d, ts, Vs), plt
 
 def linear_growth(ts, Vs):
     # Linear growth equation
@@ -175,16 +151,7 @@ def linear_growth(ts, Vs):
 
     ts_fine = np.linspace(min(ts), max(ts), 500)
     Vs_fitted = solve_linear(ts_fine, V0, best_c)
-
-    # Plot the data and fit
-    plt.figure(figsize=(10, 6))
-    plt.plot(ts, Vs, 'ro', label='Observed Data')
-    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Linear Growth Curve')
-    plt.xlabel('$t$ (days)')
-    plt.ylabel('$V(t)$ (mm³)')
-    plt.legend()
-    plt.grid(True)
-    return best_mse, plt
+    return best_mse, ts_fine, Vs_fitted
 
 def exponential_growth(ts, Vs):
     # Exponential growth model: dV/dt = c * V
@@ -219,16 +186,7 @@ def exponential_growth(ts, Vs):
 
     ts_fine = np.linspace(min(ts), max(ts), 500)
     Vs_fitted = solve_exponential(ts_fine, V0, best_c)
-
-    # Plot the data and fit
-    plt.figure(figsize=(10, 6))
-    plt.plot(ts, Vs, 'ro', label='Observed Data')
-    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Exponential Growth Curve')
-    plt.xlabel('$t$ (days)')
-    plt.ylabel('$V(t)$ (mm³)')
-    plt.legend()
-    plt.grid(True)
-    return best_mse, plt
+    return best_mse, ts_fine, Vs_fitted
 
 def allee_effect(ts, Vs):
     # Allee effect differential equation
@@ -265,13 +223,71 @@ def allee_effect(ts, Vs):
     # Generate the fitted curve using the optimal parameters
     ts_fine = np.linspace(min(ts), max(ts), 500)
     Vs_fitted = solve_allee(ts_fine, V0, best_c, best_Vmin, best_Vmax)
+    return best_mse, ts_fine, Vs_fitted
 
-    # Plot observed data and fitted curve
+def plot(ts,Vs,x,y,label,title):
     plt.figure(figsize=(10, 6))
     plt.plot(ts, Vs, 'ro', label='Observed Data')
-    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Allee Effect Curve')
+    plt.plot(x, y, '-b', label=label)
+    plt.xlabel('$t$ (days)')
+    plt.ylabel('$V(t)$ (mm³)')
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+
+
+def unused():
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Exponential Growth Curve')
     plt.xlabel('$t$ (days)')
     plt.ylabel('$V(t)$ (mm³)')
     plt.legend()
     plt.grid(True)
-    return best_mse, plt
+
+
+    # Plot the data and fit
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Linear Growth Curve')
+    plt.xlabel('$t$ (days)')
+    plt.ylabel('$V(t)$ (mm³)')
+    plt.legend()
+    plt.grid(True)
+
+
+    # Plot the data and the fit
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+
+    plt.plot(t_fit, V_fit, label='Von Bertalanffy Fit', color='blue')
+    plt.xlabel('Time (t)')
+    plt.ylabel('Volume (V)')
+    #plt.title('Von Bertalanffy Growth Model')
+    plt.legend()
+
+
+
+    # Plot observed data and fitted curve
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Mendelsohn Curve')
+    #plt.title('Tumor Volume Growth (Mendelsohn Model)')
+    plt.xlabel('$t$ (days)')
+    plt.ylabel('$V(t)$ (mm³)')
+    plt.legend()
+    plt.grid(True)
+
+
+    # Plot observed data and fitted curve
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Gompertz Curve')
+    #plt.title('Tumor Volume Growth (Gompertz Model)')
+    plt.xlabel('$t$ (days)')
+    plt.ylabel('$V(t)$ (mm³)')
+    plt.legend()
+    plt.grid(True)

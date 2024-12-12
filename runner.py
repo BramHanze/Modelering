@@ -19,30 +19,30 @@ Vs = [
 ]
 n = len(ts)
 
-gompertz_mse, gompertz_fig = diff.gompertz(ts, Vs)
-mendelsohn_mse, mendelsohn_fig = diff.mendelsohn(ts, Vs)
-vb_mse, vb_fig = diff.Von_Bertalanffy(ts, Vs)
-linear_mse, linear_fig = diff.linear_growth(ts, Vs)
-exponential_mse, exponential_fig = diff.exponential_growth(ts, Vs)
-allee_effect_mse, allee_effect_fig = diff.allee_effect(ts, Vs)
+gompertz_mse, gompertz_ts, gompertz_Vs = diff.gompertz(ts, Vs)
+mendelsohn_mse, mendelsohn_ts, mendelsohn_Vs = diff.mendelsohn(ts, Vs)
+vb_mse, vb_ts, vb_Vs = diff.von_bertalanffy(ts, Vs)
+linear_mse, linear_ts, linear_Vs = diff.linear_growth(ts, Vs)
+exponential_mse, exponential_ts, exponential_Vs = diff.exponential_growth(ts, Vs)
+allee_effect_mse, allee_effect_ts, allee_effect_Vs = diff.allee_effect(ts, Vs)
 
 models = [
-    {'name': 'Gompertz', 'fig': gompertz_fig, 'mse': gompertz_mse},
-    {'name': 'Mendelsohn', 'fig': mendelsohn_fig, 'mse': mendelsohn_mse},
-    {'name': 'Von Bertalanffy', 'fig': vb_fig, 'mse': vb_mse},
-    {'name': 'Linear Model', 'fig': linear_fig, 'mse': linear_mse},
-    {'name': 'Exponential Growth', 'fig': exponential_fig, 'mse': exponential_mse},
-    {'name': 'Allee Effect Growth', 'fig': allee_effect_fig, 'mse': allee_effect_mse}
+    {'name': 'Gompertz', 'x': gompertz_ts, 'y': gompertz_Vs, 'mse': gompertz_mse},
+    {'name': 'Mendelsohn', 'x': mendelsohn_ts, 'y': mendelsohn_Vs, 'mse': mendelsohn_mse},
+    {'name': 'Von Bertalanffy', 'x': vb_ts, 'y': vb_Vs, 'mse': vb_mse},
+    {'name': 'Linear Model', 'x': linear_ts, 'y': linear_Vs, 'mse': linear_mse},
+    {'name': 'Exponential Growth', 'x': exponential_ts, 'y': exponential_Vs, 'mse': exponential_mse},
+    {'name': 'Allee Effect Growth', 'x': allee_effect_ts, 'y': allee_effect_Vs, 'mse': allee_effect_mse}
 ]
 
-#Display figures in the order of best  AIC
 for model in models:
     rss = model['mse'] * n
     ln_likelihood = -n / 2 * np.log(rss / n)
     model['aic'] = 2 * len(models) - 2 * ln_likelihood
-for model in sorted(models, key=lambda x: x['aic']):
-    print(f'Model: {model["name"]}, AIC: {model["aic"]}')
-    #print(model['fig'])
-    #model.title(f'Tumor Volume Growth {model["name"]} model (AIC={model["aic"]:.2f})')
-    model['fig'].show()
+for model in sorted(models, key=lambda x: x['aic']): #Display figures in the order of best  AIC
+    aic = model['aic']
+    print(f'Model: {model["name"]}, AIC: {round(aic,6)}')
 
+    label = f'Fitted {model["name"]} model'
+    title = f'Tumor Volume Growth {model["name"]} Model (AIC = {round(aic,2)})'
+    diff.plot(ts,Vs,model['x'],model['y'],label,title)
