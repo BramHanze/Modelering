@@ -229,3 +229,49 @@ def exponential_growth(ts, Vs):
     plt.legend()
     plt.grid(True)
     return best_mse, plt
+
+def allee_effect(ts, Vs):
+    # Allee effect differential equation
+    def allee_equation(V, t, c, Vmin, Vmax):
+        return c * (V - Vmin) * (Vmax - V)
+
+    # Solve the Allee effect equation
+    def solve_allee(ts, V0, c, Vmin, Vmax):
+        return odeint(allee_equation, V0, ts, args=(c, Vmin, Vmax)).flatten()
+
+    # Loss function: Mean squared error
+    def mse(observed, predicted):
+        return np.mean((observed - predicted) ** 2)
+
+    # Initial volume and parameter ranges
+    V0 = Vs[0]
+    c_range = np.linspace(0.01, 0.5, 10)  # Range for c
+    Vmin_range = np.linspace(min(Vs) - 5, min(Vs) + 1, 20)  # Range for Vmin
+    Vmax_range = np.linspace(max(Vs) - 1, max(Vs) + 5, 20)  # Range for Vmax
+
+    # Grid search for optimal parameters
+    best_mse = float('inf')
+    best_c, best_Vmin, best_Vmax = None, None, None
+
+    for c in c_range:
+        for Vmin in Vmin_range:
+            for Vmax in Vmax_range:
+                Vs_pred = solve_allee(ts, V0, c, Vmin, Vmax)
+                error = mse(Vs, Vs_pred)
+                if error < best_mse:
+                    best_mse = error
+                    best_c, best_Vmin, best_Vmax = c, Vmin, Vmax
+
+    # Generate the fitted curve using the optimal parameters
+    ts_fine = np.linspace(min(ts), max(ts), 500)
+    Vs_fitted = solve_allee(ts_fine, V0, best_c, best_Vmin, best_Vmax)
+
+    # Plot observed data and fitted curve
+    plt.figure(figsize=(10, 6))
+    plt.plot(ts, Vs, 'ro', label='Observed Data')
+    plt.plot(ts_fine, Vs_fitted, '-b', label='Fitted Allee Effect Curve')
+    plt.xlabel('$t$ (days)')
+    plt.ylabel('$V(t)$ (mm³)')
+    plt.legend()
+    plt.grid(True)
+    return best_mse, plt
