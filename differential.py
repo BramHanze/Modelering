@@ -5,7 +5,10 @@ import numpy as np
 
 def fitter(ts, Vs, solve_function, param_ranges):
     """
-    Fits the given models/functions to the data
+    Fits the given models/functions to the data.
+    ts, Vs: user give data
+    solve_function: the formula for the growth model
+    param_ranges: the ranges in which the parameters are to be contained
     """
     def mse(observed, predicted): #calculate mse
         return np.mean((observed - predicted) ** 2)
@@ -30,7 +33,7 @@ def fitter(ts, Vs, solve_function, param_ranges):
     return best_mse, best_params, ts_fine, Vs_fitted
 
 def gompertz(ts, Vs):
-    def gompertz_equation(V, t, c, Vmax):
+    def gompertz_equation(V, t, c, Vmax): #Define formula
         return c * V * np.log(Vmax / V)
 
     def solve_gompertz(ts, V0, c, Vmax):
@@ -44,7 +47,7 @@ def gompertz(ts, Vs):
 
 
 def mendelsohn(ts, Vs):
-    def mendelsohn_diff_eq(V, t, c, d):
+    def mendelsohn_diff_eq(V, t, c, d): #Define formula
         return c * V**d
 
     def solve_mendelsohn(ts, V0, c, d):
@@ -58,8 +61,7 @@ def mendelsohn(ts, Vs):
 
 
 def von_bertalanffy(ts, Vs):
-    # Von Bertalanffy growth differential equation
-    def von_bertalanffy_equation(V, t, c, d):
+    def von_bertalanffy_equation(V, t, c, d): #Define formula
         return c * V**(3/4) - d * V
 
     # Solve the Von Bertalanffy equation
@@ -101,8 +103,7 @@ def von_bertalanffy(ts, Vs):
     return best_mse, ts_fine, Vs_fitted
 
 def linear_growth(ts, Vs):
-    # Linear growth equation
-    def linear_equation(V, t, c):
+    def linear_equation(V, t, c): #Define formula
         return c
 
     # Solve the linear growth equation
@@ -136,7 +137,7 @@ def linear_growth(ts, Vs):
     return best_mse, ts_fine, Vs_fitted
 
 def exponential_growth(ts, Vs):
-    def exponential_equation(V, t, c):
+    def exponential_equation(V, t, c): #Define formula
         return c * V
 
     def solve_exponential(ts, V0, c):
@@ -148,7 +149,7 @@ def exponential_growth(ts, Vs):
     return fitter(ts, Vs, solve_exponential, param_ranges)
 
 def allee_effect(ts, Vs):
-    def allee_equation(V, t, c, Vmin, Vmax):
+    def allee_equation(V, t, c, Vmin, Vmax): #Define formula
         return c * (V - Vmin) * (Vmax - V)
 
     def solve_allee(ts, V0, c, Vmin, Vmax):
@@ -163,7 +164,7 @@ def allee_effect(ts, Vs):
 
 def combined_growth(ts, Vs):
     # Deze functie combineert de formules van Exponentieel afvlakkende groei + logistische groei
-    def combined_growth_equation(V, t, c1, c2, Vmax):
+    def combined_growth_equation(V, t, c1, c2, Vmax): #Define formula
         return c1 * (Vmax - V) + c2 * V * (Vmax - V)
 
     def solve_combined_growth(ts, V0, c1, c2, Vmax):
