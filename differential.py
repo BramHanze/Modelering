@@ -161,6 +161,21 @@ def allee_effect(ts, Vs):
 
     return fitter(ts, Vs, solve_allee, param_ranges)
 
+def combined_growth(ts, Vs):
+    # Deze functie combineert de formules van Exponentieel afvlakkende groei + logistische groei
+    def combined_growth_equation(V, t, c1, c2, Vmax):
+        return c1 * (Vmax - V) + c2 * V * (Vmax - V)
+
+    def solve_combined_growth(ts, V0, c1, c2, Vmax):
+        return odeint(combined_growth_equation, V0, ts, args=(c1, c2, Vmax)).flatten()
+
+    c1_range = np.linspace(0.01, 0.5, 50)
+    c2_range = np.linspace(0.01, 0.5, 50)
+    Vmax_range = np.linspace(max(Vs) - 1, max(Vs) + 5, 50)
+    param_ranges = [c1_range, c2_range, Vmax_range]
+
+    return fitter(ts, Vs, solve_combined_growth, param_ranges)
+
 def plot(ts,Vs,x,y,label,title):
     plt.figure(figsize=(10, 6))
     plt.plot(ts, Vs, 'ro', label='Observed Data')
