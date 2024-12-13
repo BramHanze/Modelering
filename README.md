@@ -9,6 +9,7 @@ Automatically applies the following growth models:
 * Linear Growth Model
 * Exponential Growth Model
 * Allee Effect Model
+* Combined Growth Model, a combination between the exponential flattening growth & logistic growth models
 
 ## Customization
 Parameter ranges can be adjusted in every model.
@@ -23,16 +24,16 @@ New models can be added. Define the function and the ranges for the parameters i
 * matplotlib
 * pandas
 
-## Installation and use
+## Installation and usage
 #### Clone the repository:
 ```bash
 git clone https://github.com/BramHanze/Modellering.git
 ```
-#### Add your data
-Replace the data in data.txt with your desired data.
-
 #### Run the application: 
-Press 'Run All' in the included 'runner.ipynb'
+Press `Run All` in the included `runner.ipynb`.
+
+#### Add your data
+After running you will receive the question to fill in the name of your data file (.csv).
 
 ## Support
 If you encounter issues or bugs in this tool feel free to reach out via e-mail (see Authors).
