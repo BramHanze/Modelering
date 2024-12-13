@@ -81,42 +81,47 @@ def mendelsohn(ts, Vs):
 
 
 def von_bertalanffy(ts, Vs):
-    # Von Bertalanffy Model: V(t) = c * V^(2/3) - d * V
-    def von_bertalanffy_model(t, c, d):
-        return c * (t ** (2/3)) - (d * t)
+    # Von Bertalanffy growth differential equation
+    def von_bertalanffy_equation(V, t, c, d):
+        return c * V**(3/4) - d * V
 
-    # Error function (Mean Squared Error)
-    def mse(c, d, ts, Vs):
-        predicted = von_bertalanffy_model(np.array(ts), c, d)
-        return np.mean((predicted - np.array(Vs))**2)
+    # Solve the Von Bertalanffy equation
+    def solve_von_bertalanffy(ts, V0, c, d):
+        return odeint(von_bertalanffy_equation, V0, ts, args=(c, d)).flatten()
 
-    # Initial guesses for c and d
-    c_init = 0.1
-    d_init = 0.1
+    # Loss function: Mean squared error
+    def mse(observed, predicted):
+        return np.mean((observed - predicted) ** 2)
 
-    # Optimization: Gradient Descent to minimize MSE
-    learning_rate = 0.0001
-    iterations = 10000
-    c, d = c_init, d_init
+    # Initial volume and parameter ranges
+    V0 = Vs[0]
+    c_range = np.linspace(0.1, 5.0, 100)  # Expanded range for c
+    d_range = np.linspace(0.01, 2.0, 100)  # Expanded range for d
 
-    for i in range(iterations):
-        grad_c = 0
-        grad_d = 0
-        for t, V in zip(ts, Vs):
-            pred = von_bertalanffy_model(np.array([t]), c, d)
-            grad_c += 2 * (pred - V) * (t ** (2/3))
-            grad_d += 2 * (pred - V) * (-t)
-        c -= learning_rate * grad_c / len(ts)
-        d -= learning_rate * grad_d / len(ts)
-        
-    ts_fitted = np.linspace(min(ts), max(ts), 100)
-    Vs_fitted = von_bertalanffy_model(ts_fitted, c, d)
-    
-    return mse(c, d, ts, Vs), ts_fitted, Vs_fitted
+    # Grid search for optimal parameters
+    best_mse = float('inf')
+    best_c, best_d = None, None
 
-    #print(c = {c})
-    #print(d = {d})
+    for c in c_range:
+        for d in d_range:
+            Vs_pred = solve_von_bertalanffy(ts, V0, c, d)
 
+            # Ensure predictions are valid and avoid numerical issues
+            if np.any(Vs_pred <= 0):
+                continue
+
+            error = mse(Vs, Vs_pred)
+            if error < best_mse:
+                best_mse = error
+                best_c, best_d = c, d
+
+    if best_c is None or best_d is None:
+        raise ValueError("Failed to find suitable parameters. Check data or parameter ranges.")
+
+    # Generate the fitted curve using the optimal parameters
+    ts_fine = np.linspace(min(ts), max(ts), 500)
+    Vs_fitted = solve_von_bertalanffy(ts_fine, V0, best_c, best_d)
+    return best_mse, ts_fine, Vs_fitted
 
 def linear_growth(ts, Vs):
     # Linear growth equation
